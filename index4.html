@@ -1,0 +1,331 @@
+Absolutely! Here's the full upgraded **Guess the Number** game script — with the improved audio links and safe `.play()` calls to make sure sounds and music play after user interaction.
+
+Just save this as `index.html` and open it in your browser:
+
+```html
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Zobre Guess the Number</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      font-family: 'Poppins', sans-serif;
+      color: #fff;
+      text-align: center;
+      padding: 3rem 1rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 2rem;
+      overflow-x: hidden;
+    }
+    h1 {
+      font-weight: 700;
+      font-size: 2.5rem;
+      margin-bottom: 0;
+      letter-spacing: 2px;
+    }
+    #game {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 2rem 1.5rem;
+      max-width: 380px;
+      margin: 0 auto;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    button {
+      padding: 0.7rem 1.5rem;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 8px;
+      background: #764ba2;
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.3s ease;
+      box-shadow: 0 4px 12px rgba(118,75,162,0.6);
+      user-select: none;
+    }
+    button:hover:not(:disabled) {
+      background: #667eea;
+      box-shadow: 0 6px 18px rgba(102,126,234,0.8);
+    }
+    button:disabled {
+      background: #999;
+      cursor: default;
+      box-shadow: none;
+    }
+    input[type=number] {
+      padding: 0.7rem;
+      font-size: 1.2rem;
+      border-radius: 8px;
+      border: none;
+      width: 100px;
+      text-align: center;
+      margin-right: 1rem;
+      outline: none;
+      transition: box-shadow 0.3s ease;
+      user-select: text;
+    }
+    input[type=number]:focus {
+      box-shadow: 0 0 8px 2px #764ba2;
+    }
+    #result {
+      margin-top: 1rem;
+      font-size: 1.3rem;
+      min-height: 2.5rem;
+      font-weight: 600;
+      min-height: 40px;
+    }
+    #guessCount {
+      margin-top: 0.5rem;
+      font-size: 1rem;
+      color: #ddd;
+    }
+    #modeSelector {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      user-select: none;
+    }
+    .mode-btn {
+      background: #8a71c7;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(118,75,162,0.5);
+      transition: background 0.3s ease;
+      user-select: none;
+    }
+    .mode-btn.selected {
+      background: #f9a826;
+      color: #3a1e00;
+      box-shadow: 0 5px 15px rgba(249,168,38,0.8);
+    }
+    /* Animations */
+    .fadeIn {
+      animation: fadeInAnim 0.7s ease forwards;
+    }
+    .fadeOut {
+      animation: fadeOutAnim 0.5s ease forwards;
+    }
+    @keyframes fadeInAnim {
+      from { opacity: 0; transform: translateY(15px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+    @keyframes fadeOutAnim {
+      from { opacity: 1; transform: translateY(0);}
+      to { opacity: 0; transform: translateY(-15px);}
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Zobre Guess the Number</h1>
+  <div id="game">
+    <!-- Intro Screen -->
+    <div id="introScreen" class="fadeIn">
+      <p style="font-size:1.2rem; margin-bottom: 1rem;">
+        Select your number range to start:
+      </p>
+      <div id="modeSelector">
+        <div class="mode-btn" data-min="1" data-max="20">1 - 20</div>
+        <div class="mode-btn" data-min="1" data-max="25">1 - 25</div>
+        <div class="mode-btn" data-min="1" data-max="50">1 - 50</div>
+        <div class="mode-btn" data-min="1" data-max="100">1 - 100</div>
+      </div>
+      <button id="startBtn" disabled>Start Game</button>
+    </div>
+
+    <!-- Game Play -->
+    <div id="gamePlay" style="display:none;">
+      <p>Guess the number between <span id="minRange"></span> and <span id="maxRange"></span>:</p>
+      <input type="number" id="guessInput" placeholder="" />
+      <button id="guessBtn">Guess</button>
+      <p id="result"></p>
+      <p id="guessCount"></p>
+      <button id="restartBtn" style="margin-top:1rem; background:#f9a826; color:#3a1e00; box-shadow:0 5px 15px rgba(249,168,38,0.8);">Restart</button>
+    </div>
+  </div>
+
+  <!-- Audio -->
+  <audio id="bgMusic" src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_0c23843b44.mp3?filename=smooth-chill-ambient-11061.mp3" loop></audio>
+  <audio id="clickSound" src="https://cdn.pixabay.com/download/audio/2021/09/22/audio_1490d34445.mp3?filename=click-02-7886.mp3"></audio>
+  <audio id="guessSound" src="https://cdn.pixabay.com/download/audio/2021/10/15/audio_0eb314a26d.mp3?filename=computer-beep-6059.mp3"></audio>
+
+  <script>
+    // Elements
+    const introScreen = document.getElementById('introScreen');
+    const modeButtons = document.querySelectorAll('.mode-btn');
+    const startBtn = document.getElementById('startBtn');
+    const gamePlay = document.getElementById('gamePlay');
+    const minRangeSpan = document.getElementById('minRange');
+    const maxRangeSpan = document.getElementById('maxRange');
+    const guessInput = document.getElementById('guessInput');
+    const guessBtn = document.getElementById('guessBtn');
+    const result = document.getElementById('result');
+    const guessCountDisplay = document.getElementById('guessCount');
+    const restartBtn = document.getElementById('restartBtn');
+
+    const bgMusic = document.getElementById('bgMusic');
+    const clickSound = document.getElementById('clickSound');
+    const guessSound = document.getElementById('guessSound');
+
+    // Variables
+    let minNum = 1;
+    let maxNum = 20;
+    let targetNumber = 0;
+    let guessCount = 0;
+    let gameActive = false;
+
+    // Play click sound helper
+    function playClick() {
+      clickSound.currentTime = 0;
+      clickSound.play().catch(() => {});
+    }
+
+    // Play guess sound helper
+    function playGuess() {
+      guessSound.currentTime = 0;
+      guessSound.play().catch(() => {});
+    }
+
+    // Mode selection logic
+    modeButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        playClick();
+        modeButtons.forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        minNum = parseInt(btn.dataset.min);
+        maxNum = parseInt(btn.dataset.max);
+        startBtn.disabled = false;
+      });
+    });
+
+    // Start game animation + logic
+    startBtn.addEventListener('click', () => {
+      playClick();
+
+      bgMusic.volume = 0.15;
+      bgMusic.play().catch(() => { /* play might be blocked until interaction, but we’re in a click so should work */ });
+
+      // Animate intro out
+      introScreen.classList.remove('fadeIn');
+      introScreen.classList.add('fadeOut');
+
+      // Wait for animation then show gamePlay
+      setTimeout(() => {
+        introScreen.style.display = 'none';
+        gamePlay.style.display = 'block';
+        gamePlay.classList.add('fadeIn');
+        minRangeSpan.textContent = minNum;
+        maxRangeSpan.textContent = maxNum;
+        guessInput.placeholder = `${minNum} - ${maxNum}`;
+        guessInput.value = '';
+        guessInput.disabled = false;
+        guessBtn.disabled = false;
+        guessInput.focus();
+        guessCount = 0;
+        guessCountDisplay.textContent = `Guesses made: 0`;
+        result.textContent = '';
+        gameActive = true;
+
+        // Pick target number
+        targetNumber = Math.floor(Math.random() * (maxNum - minNum + 1)) + minNum;
+        // console.log("Target Number:", targetNumber);
+      }, 500);
+    });
+
+    // Check guess
+    function checkGuess() {
+      if (!gameActive) return;
+
+      const guess = Number(guessInput.value);
+      if (!guess || guess < minNum || guess > maxNum) {
+        result.textContent = `Please enter a number between ${minNum} and ${maxNum}.`;
+        return;
+      }
+      playGuess();
+
+      guessCount++;
+      guessCountDisplay.textContent = `Guesses made: ${guessCount}`;
+
+      if (guess === targetNumber) {
+        result.innerHTML = `🎉 You got it! The number was <strong>${targetNumber}</strong>.`;
+        gameActive = false;
+        guessInput.disabled = true;
+        guessBtn.disabled = true;
+        bgMusic.pause();
+      } else if (guess < targetNumber) {
+        result.textContent = '⬆️ Too low! Try again.';
+      } else {
+        result.textContent = '⬇️ Too high! Try again.';
+      }
+
+      guessInput.value = '';
+      guessInput.focus();
+    }
+
+    guessBtn.addEventListener('click', () => {
+      playClick();
+      checkGuess();
+    });
+
+    guessInput.addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') {
+        playClick();
+        checkGuess();
+      }
+    });
+
+    // Restart game: reset to intro
+    restartBtn.addEventListener('click', () => {
+      playClick();
+      gamePlay.classList.remove('fadeIn');
+      gamePlay.classList.add('fadeOut');
+
+      setTimeout(() => {
+        gamePlay.style.display = 'none';
+        introScreen.style.display = 'block';
+        introScreen.classList.remove('fadeOut');
+        introScreen.classList.add('fadeIn');
+        startBtn.disabled = true;
+        modeButtons.forEach(b => b.classList.remove('selected'));
+        bgMusic.pause();
+        bgMusic.currentTime = 0;
+      }, 400);
+    });
+  </script>
+
+</body>
+</html>
+```
+
+---
+
+### What’s new?
+
+* Fixed audio `.play()` calls with `.catch` to avoid errors.
+* Reliable sound URLs from Pixabay.
+* Background music starts only after you click **Start Game** (required for browser autoplay policy).
+* Click and beep sounds play on buttons and guesses.
+* Smooth fade animations for transitions.
+* Four selectable game ranges (1–20, 1–25, 1–50, 1–100).
+* Restart button resets game.
+
+---
+
+Try opening it in Chrome or Firefox on desktop or mobile — just click the mode, hit start, and enjoy the sounds!
+
+If you want, I can help you upload this to GitHub Pages and get a live web link for it too!
